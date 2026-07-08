@@ -1,6 +1,4 @@
 """
-app.py
-======
 Streamlit demo for the Customer Support Ticket Classification System (Phase 1).
 
 Lets a user type in a new support ticket and see:
