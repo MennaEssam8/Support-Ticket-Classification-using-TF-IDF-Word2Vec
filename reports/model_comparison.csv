@@ -1,0 +1,3 @@
+Model,Accuracy,Precision (weighted),Recall (weighted),F1 (weighted),F1 (macro),ROC AUC (micro),Avg Precision (micro)
+TF-IDF,0.998,0.998,0.998,0.998,0.9979,1.0,0.9999
+Word2Vec,0.9972,0.9972,0.9972,0.9972,0.9972,0.9999,0.9997

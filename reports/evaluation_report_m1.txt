@@ -1,0 +1,206 @@
+==============================================================================
+EVALUATION REPORT — PHASE 1
+Baseline Classification and Word Embedding Feature Engineering
+Customer Support Ticket Classification System
+==============================================================================
+
+Dataset: Bitext Customer Support LLM Chatbot Training Dataset (real data)
+Source: github.com/bitext/customer-support-llm-chatbot-training-dataset
+Dataset size (used in this run): 26872 tickets
+Number of categories: 11
+
+------------------------------------------------------------------------------
+EXPLORATORY DATA ANALYSIS (EDA)
+------------------------------------------------------------------------------
+Class distribution:
+  - ACCOUNT        :  5986 tickets ( 22.3%)
+  - ORDER          :  3988 tickets ( 14.8%)
+  - REFUND         :  2992 tickets ( 11.1%)
+  - INVOICE        :  1999 tickets (  7.4%)
+  - CONTACT        :  1999 tickets (  7.4%)
+  - PAYMENT        :  1998 tickets (  7.4%)
+  - FEEDBACK       :  1997 tickets (  7.4%)
+  - DELIVERY       :  1994 tickets (  7.4%)
+  - SHIPPING       :  1970 tickets (  7.3%)
+  - SUBSCRIPTION   :   999 tickets (  3.7%)
+  - CANCEL         :   950 tickets (  3.5%)
+
+Class imbalance ratio (largest / smallest category): 6.30x (ACCOUNT: 5986 vs CANCEL: 950)
+Ticket length: mean 8.7 words (min 1, max 16, median 9)
+
+EDA figures saved to reports/figures/:
+  - class_distribution.png
+  - text_length_distribution.png
+  - top_words_overall.png
+
+------------------------------------------------------------------------------
+MODEL: TF-IDF
+------------------------------------------------------------------------------
+Accuracy             : 0.9980
+Precision (weighted)  : 0.9980
+Recall    (weighted)  : 0.9980
+F1-score  (weighted)  : 0.9980
+Precision (macro)     : 0.9986
+Recall    (macro)     : 0.9973
+F1-score  (macro)     : 0.9979
+ROC AUC (micro-avg)   : 1.0000
+Avg Precision (micro) : 0.9999
+
+Per-class classification report:
+              precision    recall  f1-score   support
+
+     ACCOUNT       0.99      1.00      1.00      1197
+      CANCEL       1.00      1.00      1.00       190
+     CONTACT       1.00      1.00      1.00       400
+    DELIVERY       1.00      1.00      1.00       399
+    FEEDBACK       1.00      1.00      1.00       399
+     INVOICE       1.00      1.00      1.00       400
+       ORDER       1.00      1.00      1.00       798
+     PAYMENT       1.00      0.99      0.99       400
+      REFUND       1.00      1.00      1.00       598
+    SHIPPING       1.00      0.99      1.00       394
+SUBSCRIPTION       0.99      0.99      0.99       200
+
+    accuracy                           1.00      5375
+   macro avg       1.00      1.00      1.00      5375
+weighted avg       1.00      1.00      1.00      5375
+
+Confusion matrix figure saved to: reports/figures/confusion_matrix_TF-IDF.png
+ROC curve figure saved to:        figures\roc_curves_TF-IDF.png
+PR curve figure saved to:         figures\pr_curves_TF-IDF.png
+
+------------------------------------------------------------------------------
+MODEL: Word2Vec
+------------------------------------------------------------------------------
+Accuracy             : 0.9972
+Precision (weighted)  : 0.9972
+Recall    (weighted)  : 0.9972
+F1-score  (weighted)  : 0.9972
+Precision (macro)     : 0.9974
+Recall    (macro)     : 0.9970
+F1-score  (macro)     : 0.9972
+ROC AUC (micro-avg)   : 0.9999
+Avg Precision (micro) : 0.9997
+
+Per-class classification report:
+              precision    recall  f1-score   support
+
+     ACCOUNT       1.00      1.00      1.00      1197
+      CANCEL       1.00      1.00      1.00       190
+     CONTACT       1.00      1.00      1.00       400
+    DELIVERY       1.00      1.00      1.00       399
+    FEEDBACK       1.00      1.00      1.00       399
+     INVOICE       0.99      0.99      0.99       400
+       ORDER       1.00      1.00      1.00       798
+     PAYMENT       1.00      0.99      0.99       400
+      REFUND       1.00      1.00      1.00       598
+    SHIPPING       1.00      0.99      1.00       394
+SUBSCRIPTION       0.99      1.00      1.00       200
+
+    accuracy                           1.00      5375
+   macro avg       1.00      1.00      1.00      5375
+weighted avg       1.00      1.00      1.00      5375
+
+Confusion matrix figure saved to: reports/figures/confusion_matrix_Word2Vec.png
+ROC curve figure saved to:        figures\roc_curves_Word2Vec.png
+PR curve figure saved to:         figures\pr_curves_Word2Vec.png
+
+==============================================================================
+MODEL COMPARISON TABLE
+==============================================================================
+   Model  Accuracy  Precision (weighted)  Recall (weighted)  F1 (weighted)  F1 (macro)  ROC AUC (micro)  Avg Precision (micro)
+  TF-IDF    0.9980                0.9980             0.9980         0.9980      0.9979           1.0000                 0.9999
+Word2Vec    0.9972                0.9972             0.9972         0.9972      0.9972           0.9999                 0.9997
+
+(Full table also saved to reports/model_comparison.csv)
+
+Based on weighted F1-score, the TF-IDF + Logistic Regression pipeline performed better on this held-out test set.
+TF-IDF typically holds an advantage on this kind of short, template-influenced support-ticket text because sparse lexical features (specific words/n-grams like 'cancel', 'invoice', 'refund') map very directly onto category labels. Averaged Word2Vec vectors compress each document to a single dense vector, discarding word order and diluting sparse, highly discriminative terms with the surrounding context — a known limitation of simple mean-pooling for short texts.
+
+==============================================================================
+BIAS, LIMITATIONS, AND ETHICAL CONSIDERATIONS
+==============================================================================
+1. Data source and representativeness
+   - This dataset (Bitext Customer Support LLM Chatbot Training Dataset) is a
+     hybrid *synthetic* dataset: real natural-language seed text was expanded
+     using NLP/NLG technology and curated by computational linguists, rather
+     than being sampled directly from a live support queue of a specific
+     company. It is far more linguistically realistic than hand-written
+     templates (it includes typos, run-on words, register variation), but it
+     was generated to be broadly representative across many verticals, not
+     tailored to any one product, customer base, or support workflow. A
+     production deployment should be fine-tuned/validated on a sample of the
+     organization's own real tickets before going live.
+   - The dataset's `flags` field (not used as a model feature here) encodes
+     which linguistic variation each utterance represents (colloquial,
+     polite, offensive, etc.). This is a useful signal that the underlying
+     utterance distribution was deliberately engineered for diversity, which
+     is good for robustness testing but means the class-conditional language
+     style may not perfectly match a specific real deployment's tone.
+
+2. Class balance and label bias
+   - Category classes are naturally imbalanced in this dataset (see EDA
+     above — the largest category has several times more tickets than the
+     smallest). Logistic Regression trained without class weighting will
+     tend to be biased toward the majority class in a real-world imbalanced
+     stream; per-class precision/recall (not just accuracy) should always be
+     monitored, and `class_weight='balanced'` or resampling should be
+     evaluated in future phases if minority-category miss rates matter.
+   - The 11-category taxonomy used here (ACCOUNT, ORDER, REFUND, etc.) is a
+     coarse grouping of 27 finer-grained intents. Tickets that are genuinely
+     ambiguous between categories are forced into a single label by the
+     original dataset's annotation scheme, which can encode arbitrary
+     boundary decisions into what the model treats as ground truth.
+
+3. Language, dialect, and demographic bias
+   - Preprocessing (tokenization, stop word lists, lemmatization) and both
+     feature representations are English-only and tuned to relatively
+     standard English, albeit with some typos/informal phrasing represented
+     in the data. Customers who write in non-native English, regional
+     dialects, or code-switch between languages are likely to see degraded
+     classification accuracy — an indirect bias against non-native English
+     speakers that should be measured explicitly with dialect-stratified
+     evaluation before deployment.
+   - Word2Vec embeddings, even trained on a task-specific corpus, can encode
+     spurious co-occurrence patterns from that corpus. If a broader
+     general-purpose pretrained embedding is substituted in later phases,
+     it should be audited for encoded social bias (e.g. gender/occupation
+     stereotypes) before use.
+
+4. Operational and deployment risks
+   - Asymmetric misclassification cost: a REFUND or PAYMENT ticket
+     misrouted as FEEDBACK or CONTACT could delay a financially sensitive
+     issue and cause real customer harm. This baseline optimizes for
+     overall accuracy/F1 and does not account for the fact that some
+     misclassifications are costlier than others.
+   - Automation bias: support staff may over-trust automated routing labels
+     and under-scrutinize confidently-but-incorrectly routed tickets. A
+     human-in-the-loop review step and a confidence threshold for automatic
+     routing versus manual review is recommended before production use —
+     the Streamlit demo in this repo surfaces prediction probabilities for
+     exactly this reason.
+   - Feedback loops: if this classifier's own predictions are later used as
+     training labels for retraining, systematic bias will compound over
+     time rather than self-correct. Human-reviewed labels should be used
+     for any retraining data.
+   - Privacy: real support tickets (unlike this dataset's placeholder tags
+     such as {{Order Number}}) often contain genuine PII — names, emails,
+     account numbers. This phase does not implement PII detection/redaction;
+     any pipeline that stores or logs raw ticket text in production should
+     add PII detection/redaction and comply with applicable data protection
+     regulations.
+
+5. Recommended mitigations for later phases
+   - Validate on a held-out sample of the organization's own real, de-
+     identified support tickets, not only on the Bitext benchmark.
+   - Monitor per-class precision/recall/AUC in production, not just
+     aggregate accuracy, and set differentiated confidence thresholds for
+     high-stakes categories (e.g. REFUND, PAYMENT, ACCOUNT).
+   - Periodically re-audit the model for performance drift and dialect/
+     demographic disparities as real traffic patterns evolve.
+   - Maintain a human review path for low-confidence or high-stakes
+     predictions rather than fully automating ticket routing.
+
+==============================================================================
+END OF REPORT
+==============================================================================
